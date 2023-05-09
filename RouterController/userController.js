@@ -1,4 +1,4 @@
-const { dbConfig, connection } = require("../db/db");
+const { dbConfig, connection, pool} = require("../db/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
@@ -6,62 +6,72 @@ const mysql = require("mysql");
 
 // Register handeler function;
 
-const handelUserRegister = (req, res) => {
+
+const saltRounds = 10;
+
+const handelUserRegister = async (req, res) => {
   try {
     const { email, password, firstname, lastname } = req.body;
     const time_stamp = Date.now(); // Get current timestamp
     const random_no = Math.random().toString(36).substring(2, 8);
-    //creating a random database name for client;
+    // creating a random database name for client;
     const tenant_uuid = `${time_stamp}_${random_no}`;
-
-    const q =
-      "INSERT INTO registration (`email`, `password`,`tenant_uuid`) VALUES (?)";
+    const q = "INSERT INTO registration (`email`, `password`,`tenant_uuid`) VALUES (?, ?, ?)";
     const values = [email, password, tenant_uuid];
-    connection.query(q, [values], (err, result) => {
-      if (err)
-        return res.status(500).send({ error: `cannot process req ${err}` });
-      else {
-        //creating a database;
+
+    pool.query(q, values, async (err, result) => {
+      if (err) {
+        return res.status(500).send({ error: `Cannot process request: ${err}` });
+      } else {
+        // creating a database;
         const createDbQ = `CREATE DATABASE tenant_${tenant_uuid}`;
 
-        connection.query(createDbQ, (err, resul) => {
+        pool.query(createDbQ, async (err, resul) => {
           if (err) {
-            return res.status(500).send({ error: `cannot process req ${err}` });
+            return res.status(500).send({ error: `Cannot process request: ${err}` });
           } else {
             const userDbConfig = {
               ...dbConfig,
               database: `tenant_${tenant_uuid}`,
             };
-            const connection1 = mysql.createConnection(userDbConfig);
+            const pool1 = mysql.createPool(userDbConfig);
 
-            connection1.connect((error) => {
+            pool1.getConnection(async (error, connection) => {
               if (error) {
-                // console.error("Error connecting to specific db", error);
                 console.log(error);
-                return res
-                  .status(300)
-                  .send({ error: `cannot process req ,${error}` });
+                return res.status(300).send({ error: `Cannot process request: ${error}` });
               } else {
-                // Call the function to check and create table
-                createTodoTableIfNotExists(connection1);
-                createUserTableIfNotExists(connection1);
+                // Call the function to check and create tables
+                let todo = await createTodoTableIfNotExists(pool1);
+                let user = await createUserTableIfNotExists(pool1);
 
-               console.log(connection1.config.database)
-                const q =
-                "INSERT INTO user (`email`,`firstname`,`lastname`,`password`,`tenant_uuid`) VALUES (?)";
-              const values = [email,firstname,lastname,password,tenant_uuid];
-              connection1.query(q, values, (err, result) => {
-                if(result){
-                res
-                  .status(200)
-                  .send({result:`Inserted data into tenant_${tenant_uuid} succesfully`,result});
-                }
-                else {
-                  res.status(500)
-                  .send({result:`Error while Inserted data into db tenant_${tenant_uuid}`,err});
-                }
-              })   
+                // Hash the password
+                bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
+                  if (err) {
+                    console.error("Error hashing password:", err);
+                    return res.status(500).send({ error: "Error hashing password" });
+                  }
+
+                  const q = "INSERT INTO user (`email`,`firstname`,`lastname`,`password`,`tenant_uuid`) VALUES (?, ?, ?, ?, ?)";
+                  const values = [email, firstname, lastname, hashedPassword, tenant_uuid];
+
+                  pool1.query(q, values, (err, result) => {
+                    if (result) {
+                      res.status(200).send({
+                        result: `Inserted data into tenant_${tenant_uuid} successfully`,
+                      });
+                    } else {
+                      res.status(500).send({
+                        result: `Error while inserting data into db tenant_${tenant_uuid}`,
+                        err,
+                      });
+                    }
+                  });
+                });
               }
+
+              connection.release(); 
+              // Release the connection
             });
           }
         });
@@ -69,9 +79,10 @@ const handelUserRegister = (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send({ error: "cannot process req", error });
+    res.status(500).send({ error: "Cannot process request", error });
   }
 };
+
 
 // Login handler function
 const handelUserLogin = async (req, res) => {
@@ -81,7 +92,7 @@ const handelUserLogin = async (req, res) => {
 
     const isEmailPresentQ = "SELECT * FROM registration  WHERE email=?";
     const value = [email];
-    connection.query(isEmailPresentQ, value, (err, result) => {
+    pool.query(isEmailPresentQ, value, (err, result) => {
       if (err)
         return res.status(300).send({ error: "cannot process req", err });
       else if (result.length === 0) {
@@ -96,40 +107,35 @@ const handelUserLogin = async (req, res) => {
   }
 };
 
-// Check if table exists and create if not
-const createTodoTableIfNotExists = (connection) => {
-  console.log(connection.config.database);
-  const tableName = "todo";
-  const checkTableQuery = `SELECT 1 FROM ${tableName} LIMIT 1;`;
+// // Check if table exists and create if not
+const createTodoTableIfNotExists = (pool1) => {
+  // console.log(pool1.Pool);
   const createTableQuery = `
-    CREATE TABLE ${tableName} (
+    CREATE TABLE todo (
       id INT AUTO_INCREMENT PRIMARY KEY,
       title VARCHAR(255),
       description VARCHAR(255),
       status TINYINT(1)
     );`;
-  connection.query(checkTableQuery, (error, results) => {
+  // Table does not exist, create it
+  pool1.query(createTableQuery, (error) => {
     if (error) {
-      // Table does not exist, create it
-      connection.query(createTableQuery, (error) => {
-        if (error) {
-          console.error("Error creating table:", error);
-        } else {
-          console.log("Todo table created successfully");
-        }
-      });
+      console.error("Error creating table:", error);
+      return false;
     } else {
-      console.log("Todo table already exists");
+      console.log("Todo table created successfully");
+      return true;
     }
   });
+
 };
 // Check if table exists and create if not
-const createUserTableIfNotExists = (connection) => {
-  console.log(connection.config.database);
+const createUserTableIfNotExists = (pool1) => {
+  // console.log(pool1.config.database);
   const tableName = "user";
   const checkTableQuery = `SELECT 1 FROM ${tableName} LIMIT 1;`;
   const createTableQuery = `
-      CREATE TABLE ${tableName} (
+      CREATE TABLE user (
         id INT AUTO_INCREMENT PRIMARY KEY,
         firstname VARCHAR(255),
         lastname VARCHAR(255),
@@ -137,22 +143,101 @@ const createUserTableIfNotExists = (connection) => {
         password VARCHAR(255),
         role INT DEFAULT 1,
         tenant_uuid VARCHAR(255)
-
-      );`;
-  connection.query(checkTableQuery, (error, results) => {
+      )`;
+  // Table does not exist, create it
+  pool1.query(createTableQuery, (error) => {
     if (error) {
-      // Table does not exist, create it
-      connection.query(createTableQuery, (error) => {
-        if (error) {
-          console.error("Error creating table:", error);
-        } else {
-          console.log("User table created successfully");
-        }
-      });
+      console.error("Error creating table:", error);
+      return false;
     } else {
-      console.log("User table already exists");
+      console.log("User table created successfully");
+
+      return true;
     }
   });
 };
 
 module.exports = { handelUserLogin, handelUserRegister };
+
+
+
+
+
+
+
+// const handelUserRegister = async(req, res) => {
+//   try {
+//     const { email, password, firstname, lastname } = req.body;
+//     const time_stamp = Date.now(); // Get current timestamp
+//     const random_no = Math.random().toString(36).substring(2, 8);
+//     //creating a random database name for client;
+//     const tenant_uuid = `${time_stamp}_${random_no}`;
+//     const q =
+//       "INSERT INTO registration (`email`, `password`,`tenant_uuid`) VALUES (?)";
+//     const values = [email, password, tenant_uuid];
+//     pool.query(q, [values], async (err, result) => {
+//       if (err)
+//         return res.status(500).send({ error: `cannot process req ${err}` });
+//       else {
+//         //creating a database;
+//         const createDbQ = `CREATE DATABASE tenant_${tenant_uuid}`;
+
+//         pool.query(createDbQ, async(err, resul) => {
+//           if (err) {
+//             return res.status(500).send({ error: `cannot process req ${err}` });
+//           } else {
+//             const userDbConfig = {
+//               ...dbConfig,
+//               database: `tenant_${tenant_uuid}`,
+//             };
+//             const pool1 = mysql.createPool(userDbConfig);
+
+//            await pool1.getConnection(async (error) => {
+//               if (error) {
+//                 // console.error("Error connecting to specific db", error);
+//                 console.log(error);
+//                 return res
+//                   .status(300)
+//                   .send({ error: `cannot process req ,${error}` });
+//               } else {
+//                 // Call the function to check and create table
+//                 let todo = await createTodoTableIfNotExists(pool1);
+//                 let user = await createUserTableIfNotExists(pool1);
+
+//                 // console.log(pool.config.database);
+//                 const q =
+//                   "INSERT INTO user (`email`,`firstname`,`lastname`,`password`,`tenant_uuid`) VALUES (?)";
+//                 const values = [
+//                   email,
+//                   firstname,
+//                   lastname,
+//                   password,
+//                   tenant_uuid,
+//                 ];
+//                 pool1.query(q, [values], (err, result) => {
+//                   if (result) {
+//                     res
+//                       .status(200)
+//                       .send({
+//                         result: `Inserted data into tenant_${tenant_uuid} succesfully`,
+//                       });
+//                   } else {
+//                     res
+//                       .status(500)
+//                       .send({
+//                         result: `Error while Inserted data into db tenant_${tenant_uuid}`,
+//                         err,
+//                       });
+//                   }
+//                 });
+//               }
+//             });
+//           }
+//         });
+//       }
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({ error: "cannot process req", error });
+//   }
+// };
