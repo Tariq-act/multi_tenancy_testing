@@ -14,7 +14,7 @@ const handelUserRegister=(req,res)=>{
     const time_stamp = Date.now(); // Get current timestamp
     const random_no = Math.random().toString(36).substring(2, 8);
     //creating a random database name for client;
-    const tenant_uuid = `tenant_${time_stamp}_${random_no}`;
+    const tenant_uuid = `${time_stamp}_${random_no}`;
 
     const q =
       "INSERT INTO registration (`email`, `password`,`tenant_uuid`) VALUES (?)";
@@ -47,11 +47,11 @@ const  handelUserLogin=async (req, res) => {
       const { email, password } = req.body;
       // Authenticate user and retrieve user's database information
      
-      const isEmailPresentQ="SELECT * FROM registration user WHERE email=?"
+      const isEmailPresentQ="SELECT * FROM registration  WHERE email=?"
         const value=[email];
-        connection.query(isEmailPresentQ, [value],(err,result)=>{
+        connection.query(isEmailPresentQ, value,(err,result)=>{
             if(err) return res.status(300).send({"error":"cannot process req",err})
-             else if(result.lengt===0){
+             else if(result.length===0){
                 return res.status(301).send({"error":"please sign up first"})
              }
              else{
@@ -62,16 +62,19 @@ const  handelUserLogin=async (req, res) => {
               connection1.connect((error) => {
                 if (error) {
                   console.error('Error connecting to specific db', error);
+                  return res.status(300).send({"error":`cannot process req ,${error}`})
                 } else {
-                  console.log('Connected to specific db');
-                  // Call the function to check and create table
+
+                    // Call the function to check and create table
+                  createTodoTableIfNotExists(connection1)
+              createUserTableIfNotExists(connection1)
+                  res.status(200).send(`Connected to specific db ${ result[0].tenant_uuid}`);
+                
                 }
               });
-              // check if todo or user table present or not and create according to that
-              createTodoTableIfNotExists(connection1)
-              createUserTableIfNotExists(connection1)
-              res.send({result:"Connected to the user database succesfully"})
-           
+             
+              
+             
              }
             });
           } catch (err) {
@@ -125,7 +128,7 @@ const createUserTableIfNotExists = (connection) => {
         lastname VARCHAR(255),
         email VARCHAR(255),
         password VARCHAR(255),
-        role INT DEFAULT
+        role INT DEFAULT 1
       );`
     connection.query(checkTableQuery, (error, results) => {
       if (error) {
