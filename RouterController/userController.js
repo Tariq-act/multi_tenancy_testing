@@ -1,41 +1,88 @@
 
-const {dbConfig } = require("../db/db");
+const {dbConfig, connection } = require("../db/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const mysql=require("mysql")
 
 
+// Register handeler function;
+
+const handelUserRegister=(req,res)=>{
+  try {
+    const { email, password } = req.body;
+    const time_stamp = Date.now(); // Get current timestamp
+    const random_no = Math.random().toString(36).substring(2, 8);
+    //creating a random database name for client;
+    const tenant_uuid = `tenant_${time_stamp}_${random_no}`;
+
+    const q =
+      "INSERT INTO registration (`email`, `password`,`tenant_uuid`) VALUES (?)";
+      const values=[email,password,tenant_uuid]
+    connection.query(q, [values], (err, result) => {
+      if (err) return res.status(500).send({"error":`cannot process req ${err}`})
+      else{
+        //creating a database;
+        const createDbQ=`CREATE DATABASE tenant_${tenant_uuid}`
+        connection.query(createDbQ, (err,result)=>{
+            if(err)return res.status(500).send({"error":`cannot process req ${err}`})
+            return res.status(200).send({"message":`user register success`,tenant_uuid})
+        })
+      }
+    });
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({"error":"cannot process req",error})
+  }
+}
+
+
+
+
+
+
 // Login handler function
 const  handelUserLogin=async (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { email, password } = req.body;
       // Authenticate user and retrieve user's database information
-      const databaseName = username;
+     
+      const isEmailPresentQ="SELECT * FROM registration user WHERE email=?"
+        const value=[email];
+        connection.query(isEmailPresentQ, [value],(err,result)=>{
+            if(err) return res.status(300).send({"error":"cannot process req",err})
+             else if(result.lengt===0){
+                return res.status(301).send({"error":"please sign up first"})
+             }
+             else{
+              console.log(result)
+              const userDbConfig = { ...dbConfig, database: result[0].tenant_uuid };
+              const connection1 = mysql.createConnection(userDbConfig);
+        
+              connection1.connect((error) => {
+                if (error) {
+                  console.error('Error connecting to specific db', error);
+                } else {
+                  console.log('Connected to specific db');
+                  // Call the function to check and create table
+                }
+              });
+              // check if todo or user table present or not and create according to that
+              createTodoTableIfNotExists(connection1)
+              createUserTableIfNotExists(connection1)
+              res.send({result:"Connected to the user database succesfully"})
+           
+             }
+            });
+          } catch (err) {
+            // Handle authentication errors
+            res.send(401,'Invalid username or password',err);
+            console.log(err)
+          }
 
       
 
-      // Create a new MySQL connection for the user's specific database
-      const userDbConfig = { ...dbConfig, database: username };
-      const connection = mysql.createConnection(userDbConfig);
-
-      connection.connect((error) => {
-        if (error) {
-          console.error('Error connecting to specific db', error);
-        } else {
-          console.log('Connected to specific db');
-          // Call the function to check and create table
-        }
-      });
-      // check if todo or user table present or not and create according to that
-      createTodoTableIfNotExists(connection)
-      createUserTableIfNotExists(connection)
-      res.send({result:"Connected to the user database succesfully"})
-    } catch (err) {
-      // Handle authentication errors
-      res.send(401,'Invalid username or password',err);
-      console.log(err)
-    }
+     
   };
 
 
@@ -96,5 +143,7 @@ const createUserTableIfNotExists = (connection) => {
     });
   };
 
+  
 
- module.exports={handelUserLogin}
+
+ module.exports={handelUserLogin,handelUserRegister}
