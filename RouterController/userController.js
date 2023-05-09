@@ -1,11 +1,11 @@
-const { dbConfig, connection, pool} = require("../db/db");
+const { dbConfig, connection, pool } = require("../db/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const mysql = require("mysql");
 
+const cookieParser = require("cookie-parser");
 // Register handeler function;
-
 
 const saltRounds = 10;
 
@@ -16,19 +16,24 @@ const handelUserRegister = async (req, res) => {
     const random_no = Math.random().toString(36).substring(2, 8);
     // creating a random database name for client;
     const tenant_uuid = `${time_stamp}_${random_no}`;
-    const q = "INSERT INTO registration (`email`, `password`,`tenant_uuid`) VALUES (?, ?, ?)";
+    const q =
+      "INSERT INTO registration (`email`, `password`,`tenant_uuid`) VALUES (?, ?, ?)";
     const values = [email, password, tenant_uuid];
 
     pool.query(q, values, async (err, result) => {
       if (err) {
-        return res.status(500).send({ error: `Cannot process request: ${err}` });
+        return res
+          .status(500)
+          .send({ error: `Cannot process request: ${err}` });
       } else {
         // creating a database;
         const createDbQ = `CREATE DATABASE tenant_${tenant_uuid}`;
 
         pool.query(createDbQ, async (err, resul) => {
           if (err) {
-            return res.status(500).send({ error: `Cannot process request: ${err}` });
+            return res
+              .status(500)
+              .send({ error: `Cannot process request: ${err}` });
           } else {
             const userDbConfig = {
               ...dbConfig,
@@ -39,7 +44,9 @@ const handelUserRegister = async (req, res) => {
             pool1.getConnection(async (error, connection) => {
               if (error) {
                 console.log(error);
-                return res.status(300).send({ error: `Cannot process request: ${error}` });
+                return res
+                  .status(300)
+                  .send({ error: `Cannot process request: ${error}` });
               } else {
                 // Call the function to check and create tables
                 let todo = await createTodoTableIfNotExists(pool1);
@@ -49,11 +56,20 @@ const handelUserRegister = async (req, res) => {
                 bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
                   if (err) {
                     console.error("Error hashing password:", err);
-                    return res.status(500).send({ error: "Error hashing password" });
+                    return res
+                      .status(500)
+                      .send({ error: "Error hashing password" });
                   }
 
-                  const q = "INSERT INTO user (`email`,`firstname`,`lastname`,`password`,`tenant_uuid`) VALUES (?, ?, ?, ?, ?)";
-                  const values = [email, firstname, lastname, hashedPassword, tenant_uuid];
+                  const q =
+                    "INSERT INTO user (`email`,`firstname`,`lastname`,`password`,`tenant_uuid`) VALUES (?, ?, ?, ?, ?)";
+                  const values = [
+                    email,
+                    firstname,
+                    lastname,
+                    hashedPassword,
+                    tenant_uuid,
+                  ];
 
                   pool1.query(q, values, (err, result) => {
                     if (result) {
@@ -70,7 +86,7 @@ const handelUserRegister = async (req, res) => {
                 });
               }
 
-              connection.release(); 
+              connection.release();
               // Release the connection
             });
           }
@@ -83,26 +99,47 @@ const handelUserRegister = async (req, res) => {
   }
 };
 
-
 // Login handler function
+
 const handelUserLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    // Authenticate user and retrieve user's database information
 
-    const isEmailPresentQ = "SELECT * FROM registration  WHERE email=?";
+    // Authenticate user and retrieve user's database information
+    const isEmailPresentQ = "SELECT * FROM registration WHERE email=?";
     const value = [email];
     pool.query(isEmailPresentQ, value, (err, result) => {
-      if (err)
-        return res.status(300).send({ error: "cannot process req", err });
-      else if (result.length === 0) {
-        return res.status(301).send({ error: "please sign up first" });
+      if (err) {
+        return res.status(500).send({ error: "cannot process req", err });
+      } else if (result.length === 0) {
+        return res.status(401).send({ error: "please sign up first" });
       } else {
+        // Perform password verification here
+        // ...
+        bcrypt.compare(password, result[0].password, (err, resul) => {
+          if (err) {
+            return res.status(500).json({ error: "Login again.", err });
+          } else {
+            // Generate a JWT token
+            let uuid = result[0].tenant_uuid;
+            const token = jwt.sign({ uuid }, "javascrit", {
+              expiresIn: "1h",
+            });
+            return res
+              .cookie("access_token", token, {
+                httpOnly: true,
+              })
+              .status(200)
+              .send({ token });
+            // Return the token in the response
+          }
+        });
       }
     });
   } catch (err) {
     // Handle authentication errors
-    res.send(401, "Invalid username or password", err);
+    res.status(500).send({ error: "Internal server error", err });
+
     console.log(err);
   }
 };
@@ -127,7 +164,6 @@ const createTodoTableIfNotExists = (pool1) => {
       return true;
     }
   });
-
 };
 // Check if table exists and create if not
 const createUserTableIfNotExists = (pool1) => {
@@ -158,12 +194,6 @@ const createUserTableIfNotExists = (pool1) => {
 };
 
 module.exports = { handelUserLogin, handelUserRegister };
-
-
-
-
-
-
 
 // const handelUserRegister = async(req, res) => {
 //   try {

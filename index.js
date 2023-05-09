@@ -3,12 +3,14 @@ const app=express()
 app.use(express.json());
 require("dotenv").config();
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const { connection } = require("./db/db");
 const { usersRoute } = require("./Routes/user");
 app.use(cors({
   origin:"*"
 }))
 app.use("/user",usersRoute)
+app.use(cookieParser());
 // Connect to the MySQL server
 app.listen(8090,(err)=>{
 if(err){
