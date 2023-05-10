@@ -232,4 +232,43 @@ const handleDeleteTodo = (req, res) => {
 
 
 
-module.exports = { handelAddTodo,handelAddTodo,handleDeleteTodo,handleUpdateTodo };
+  const handleGetAllTodo = (req, res) => {
+    try {
+      const tenantId = req.headers.tenant_uuid;
+      // Connect to the tenant database
+      const dbName = `tenant_${tenantId}`;
+      const userDbConfig = {
+        ...dbConfig,
+        database: dbName,
+      };
+      const pool1 = mysql.createPool(userDbConfig);
+  
+      pool1.getConnection((error, connection) => {
+        if (error) {
+          return res
+            .status(401)
+            .send({ error: "error while connecting to the database", error });
+        }
+  
+        const query = "SELECT * FROM todo";
+        connection.query(query, (err, results) => {
+          connection.release();
+  
+          if (err) {
+            return res
+              .status(401)
+              .send({ error: "cannot process request", err });
+          }
+  
+          res.send(results);
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      res.send("error");
+    }
+  };
+  
+
+
+module.exports = { handelAddTodo,handleDeleteTodo,handleUpdateTodo,handleGetAllTodo };
