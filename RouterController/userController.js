@@ -5,6 +5,7 @@ require("dotenv").config();
 const mysql = require("mysql");
 
 const cookieParser = require("cookie-parser");
+const { encryptPassword } = require("../middleware/password.encrypt");
 // Register handeler function;
 
 const saltRounds = 10;
@@ -16,9 +17,10 @@ const handelUserRegister = async (req, res) => {
     const random_no = Math.random().toString(36).substring(2, 8);
     // creating a random database name for client;
     const tenant_uuid = `${time_stamp}_${random_no}`;
+    let hashedPassword=await encryptPassword(password)
     const q =
       "INSERT INTO registration (`email`, `password`,`tenant_uuid`) VALUES (?, ?, ?)";
-    const values = [email, password, tenant_uuid];
+    const values = [email, hashedPassword, tenant_uuid];
 
     pool.query(q, values, async (err, result) => {
       if (err) {
@@ -152,7 +154,8 @@ const createTodoTableIfNotExists = (pool1) => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       title VARCHAR(255),
       description VARCHAR(255),
-      status TINYINT(1)
+      status TINYINT(1) DEFAULT 0,
+      user_id INT(55)
     );`;
   // Table does not exist, create it
   pool1.query(createTableQuery, (error) => {

@@ -1,10 +1,21 @@
-const express=require('express');
+const express = require('express');
 const { handelAddTodo } = require('../RouterController/todoController');
 const { addClint } = require('../RouterController/clientController');
-const clientRoute=express.Router()
+const { userLogin } = require('../RouterController/clientrouter.userlogin');
+
+const clientRoute = express.Router();
+
 require('dotenv').config();
-clientRoute.post('/todo', handelAddTodo)
-clientRoute.post("/addclint",addClint)
-module.exports={
-    clientRoute
-}
+
+// Route for adding a todo
+clientRoute.post('/addtodo', handelAddTodo);
+
+// Route for adding a client
+clientRoute.post("/addclient", addClint);
+
+// Route for user login
+clientRoute.post("/userlogin", userLogin);
+
+module.exports = {
+  clientRoute
+};
