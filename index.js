@@ -5,22 +5,23 @@ require("dotenv").config();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { connection } = require("./db/db");
-const { usersRoute } = require("./Routes/user");
-const { clientRoute } = require("./Routes/clientRoutes");
+const { clientRoute } = require("./Routes/clientRoute");
+const { usersRoute } = require("./Routes/userRoute");
+const { userTodoRoute } = require("./Routes/todoRoute");
+
+
 app.use(cors({
   origin:"*"
 }))
 
 app.use(cookieParser());
 
+app.use("/client",clientRoute)
 
-app.use("/user",usersRoute)
-
-app.use('/post',clientRoute)
-
-
+app.use('/user',usersRoute)
+app.use("/todo",userTodoRoute)
 // Connect to the MySQL server
-app.listen(8090,(err)=>{
+app.listen(8080,(err)=>{
 if(err){
 console.log(err)
 }
