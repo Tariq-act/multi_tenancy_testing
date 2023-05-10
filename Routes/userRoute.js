@@ -1,13 +1,17 @@
 const express=require('express');
-const { addUser, deleteUser, updateUser, getUser, userLogin } = require('../RouterController/userController');
+const { addUser, deleteUser, updateUser, getUser, userLogin, handleGetAllUser } = require('../RouterController/userController');
+const { validateAdmin } = require('../middleware/validateadmin');
 
 const usersRoute=express.Router()
 require('dotenv').config();
-usersRoute.post("/adduser",addUser)
-usersRoute.get("/getuser",getUser)
-usersRoute.patch("/updateuser",updateUser)
-usersRoute.delete("/deleteuser",deleteUser)
 usersRoute.post("/login",userLogin)
+usersRoute.use("/",validateAdmin)
+usersRoute.post("/adduser",addUser)
+usersRoute.get("/getuser/:id",getUser)
+usersRoute.patch("/updateuser/:id",updateUser)
+usersRoute.delete("/deleteuser/:id",deleteUser)
+usersRoute.get("/alluser",handleGetAllUser)
+
 module.exports={
     usersRoute
 }

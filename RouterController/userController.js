@@ -168,7 +168,7 @@ const updateUser = (req, res) => {
 
 const deleteUser = (req, res) => {
   try {
-    const { email } = req.query;
+    const { id} = req.params;
     const token = req.cookies.access_token;
 
     jwt.verify(token, "javascrit", (err, result) => {
@@ -191,8 +191,8 @@ const deleteUser = (req, res) => {
 
         console.log("Connected to the database");
 
-        const deleteUserQuery = "DELETE FROM user WHERE email = ?";
-        const deleteUserValues = [email];
+        const deleteUserQuery = "DELETE FROM user WHERE id = ?";
+        const deleteUserValues = [id];
 
         connection.query(deleteUserQuery, deleteUserValues, (err, result) => {
           if (err) {
@@ -264,10 +264,49 @@ const userLogin = async (req, res) => {
   }
 };
 
+const handleGetAllUser = (req, res) => {
+  try {
+    const tenantId = req.headers.tenant_uuid;
+    // Connect to the tenant database
+    const dbName = `tenant_${tenantId}`;
+    const userDbConfig = {
+      ...dbConfig,
+      database: dbName,
+    };
+    const pool1 = mysql.createPool(userDbConfig);
+
+    pool1.getConnection((error, connection) => {
+      if (error) {
+        return res
+          .status(401)
+          .send({ error: "error while connecting to the database", error });
+      }
+
+      const query = "SELECT * FROM user";
+      connection.query(query, (err, results) => {
+        connection.release();
+
+        if (err) {
+          return res
+            .status(401)
+            .send({ error: "cannot process request", err });
+        }
+
+        res.send(results);
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    res.send("error");
+  }
+};
+
 
 module.exports = {
-  addUser,deleteUser,updateUser,getUser,userLogin
+  addUser,deleteUser,updateUser,getUser,userLogin,handleGetAllUser
 };
+
+
 
 
 

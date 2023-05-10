@@ -130,7 +130,7 @@ const handelClientLogin = async (req, res) => {
                 httpOnly: true,
               })
               .status(200)
-              .send({ token });
+              .send({ token,email });
             // Return the token in the response
           }
         });
