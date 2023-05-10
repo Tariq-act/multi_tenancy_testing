@@ -2,7 +2,7 @@ const mysql=require("mysql")
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: 'root',
+    password: 'Suvam@7787',
     database: 'common_db'
   }
   const pool = mysql.createPool(dbConfig);

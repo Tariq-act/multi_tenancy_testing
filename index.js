@@ -20,7 +20,7 @@ app.use('/post',clientRoute)
 
 
 // Connect to the MySQL server
-app.listen(8080,(err)=>{
+app.listen(8090,(err)=>{
 if(err){
 console.log(err)
 }
