@@ -1,6 +1,5 @@
 const express=require('express');
-const { addUser, deleteUser, updateUser, getUser } = require('../RouterController/userController');
-const { userLogin } = require('../RouterController/clientrouter.userlogin');
+const { addUser, deleteUser, updateUser, getUser, userLogin } = require('../RouterController/userController');
 
 const usersRoute=express.Router()
 require('dotenv').config();
