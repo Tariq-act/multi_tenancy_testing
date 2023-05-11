@@ -15,13 +15,14 @@ app.use(cors({
 }))
 
 app.use(cookieParser());
-
+//registering the client and login 
 app.use("/client",clientRoute)
-
+//adding a new user thorough client and all crud o/p on user can be performed under this route;
 app.use('/user',usersRoute)
+//routes releated todo CRUD can be performed under this route;
 app.use("/todo",userTodoRoute)
 // Connect to the MySQL server
-app.listen(8080,(err)=>{
+app.listen(8090,(err)=>{
 if(err){
 console.log(err)
 }

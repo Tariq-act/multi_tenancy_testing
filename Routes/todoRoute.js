@@ -14,7 +14,7 @@ userTodoRoute.post('/alltodo', handelAddTodo);
 // Route for delete a todo
 userTodoRoute.post('/delete', handleDeleteTodo);
 // Route for update a todo
-userTodoRoute.post('/addtodo', handleUpdateTodo);
+userTodoRoute.post('/updatetodo', handleUpdateTodo);
 // Route to get all todo
 userTodoRoute.get('/alltodo',validateAdmin,handleGetAllTodo);
 
