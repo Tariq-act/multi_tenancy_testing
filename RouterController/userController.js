@@ -3,11 +3,13 @@ const { dbConfig, connection, pool } = require("../db/db");
 const mysql = require("mysql");
 const { encryptPassword } = require("../middleware/password.encrypt");
 const { decryptPassword } = require("../middleware/password.decrypt");
-const addUser = (req, res) => {
+const { sendCredentialsEmail } = require("../middleware/email&pass.sender");
+const addUser = async(req, res) => {
   try {
     const { email, firstname, lastname, password } = req.body;
     const token = req.cookies.access_token;
-
+let username=`${firstname} ${lastname}`
+    await sendCredentialsEmail(email,username,password)
     jwt.verify(token, "javascrit", async(err, result) => {
       if (err) {
         return res.status(401).send({ error: "cannot process req", err });
@@ -300,6 +302,9 @@ const handleGetAllUser = (req, res) => {
     res.send("error");
   }
 };
+
+
+
 
 
 module.exports = {
