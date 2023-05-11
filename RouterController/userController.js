@@ -34,7 +34,12 @@ let username=`${firstname} ${lastname}`
 
         const insertUserQuery =
           "INSERT INTO user_incomming (email, firstname, lastname, password, role, org_id) VALUES (?, ?, ?, ?, ?, ?)";
-        let uuid = result.uuid;
+        //saving user uuid to a cookie for later use
+          // res.cookie("useruuid", result.uuid, {
+          //   httpOnly: true,
+          //   // Set to true if using HTTPS
+          // });
+        // let uuid = await encryptPassword(result.uuid) 
      
         const insertUserValues = [
           email,
@@ -42,7 +47,7 @@ let username=`${firstname} ${lastname}`
           lastname,
           hashpassword,
           0,
-          uuid,
+          result.uuid,
         ];
         pool.query(insertUserQuery, insertUserValues, (err, resul) => {
           if (err) {
@@ -258,7 +263,18 @@ const userLogin = async (req, res) => {
         return res.status(401).json({ error: "Invalid email or password" });
       }
       // Generate a token using the user ID
-      const token = jwt.sign({ org_id: user.org_id }, process.env.secret_key);
+
+      //getting uuid from user cookie;
+
+      // const useruuid= req.cookies.useruuid
+      // console.log(useruuid,"useruuid")
+ 
+       
+      // const decryptuuid=await decryptPassword(useruuid,user.org_id,) 
+      
+      // console.log(decryptuuid,"de");
+       
+      const token = jwt.sign({ org_id: results.org_id}, process.env.secret_key);
 
       // Set the token as a cookie using the 'access_token' name
       res.cookie("user_acces_token", token, {
