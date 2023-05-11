@@ -16,7 +16,7 @@ app.use(cors({
 
 app.get("/",(req,res)=>{
 
-res.status(300).send({result:"Home page"})
+res.status(200).send({result:"Home page"})
 
 })
 
