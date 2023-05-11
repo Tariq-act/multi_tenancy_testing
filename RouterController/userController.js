@@ -4,6 +4,9 @@ const mysql = require("mysql");
 const { encryptPassword } = require("../middleware/password.encrypt");
 const { decryptPassword } = require("../middleware/password.decrypt");
 const { sendCredentialsEmail } = require("../middleware/email&pass.sender");
+
+
+
 const addUser = async(req, res) => {
   try {
     const { email, firstname, lastname, password } = req.body;
@@ -25,7 +28,7 @@ const addUser = async(req, res) => {
 
 
 let username=`${firstname} ${lastname}`
-    await sendCredentialsEmail(email,username,password)
+    // await sendCredentialsEmail(email,username,password)
     jwt.verify(token, process.env.secret_key, async(err, result) => {
       if (err) {
         return res.status(401).send({ error: "cannot process req", err });
@@ -35,11 +38,13 @@ let username=`${firstname} ${lastname}`
         const insertUserQuery =
           "INSERT INTO user_incomming (email, firstname, lastname, password, role, org_id) VALUES (?, ?, ?, ?, ?, ?)";
         //saving user uuid to a cookie for later use
-          // res.cookie("useruuid", result.uuid, {
-          //   httpOnly: true,
-          //   // Set to true if using HTTPS
-          // });
-        // let uuid = await encryptPassword(result.uuid) 
+        res.cookie("useruuid", result.org_id, {
+              httpOnly: true,
+            });
+
+          console.log(req.cookies.useruuid,"useriiid")
+
+        let uuid = await encryptPassword(result.uuid) 
      
         const insertUserValues = [
           email,
@@ -47,7 +52,7 @@ let username=`${firstname} ${lastname}`
           lastname,
           hashpassword,
           0,
-          result.uuid,
+          uuid,
         ];
         pool.query(insertUserQuery, insertUserValues, (err, resul) => {
           if (err) {
@@ -266,15 +271,16 @@ const userLogin = async (req, res) => {
 
       //getting uuid from user cookie;
 
-      // const useruuid= req.cookies.useruuid
-      // console.log(useruuid,"useruuid")
+      const useruuid=req.cookies.useruuid
+
+      console.log(req.cookies.useruuid,"u")
  
        
-      // const decryptuuid=await decryptPassword(useruuid,user.org_id,) 
+      const decryptuuid=await decryptPassword(useruuid,user.org_id) 
       
-      // console.log(decryptuuid,"de");
+      console.log(decryptuuid,"de");
        
-      const token = jwt.sign({ org_id: results.org_id}, process.env.secret_key);
+      const token = jwt.sign({ org_id: decryptuuid}, process.env.secret_key);
 
       // Set the token as a cookie using the 'access_token' name
       res.cookie("user_acces_token", token, {
