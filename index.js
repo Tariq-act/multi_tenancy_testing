@@ -14,6 +14,12 @@ app.use(cors({
   origin:"*"
 }))
 
+app.get("/",(req,res)=>{
+
+res.status(300).send({result:"Home page"})
+
+})
+
 app.use(cookieParser());
 //registering the client and login 
 app.use("/client",clientRoute)
