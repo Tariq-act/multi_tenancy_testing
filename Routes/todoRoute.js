@@ -10,7 +10,7 @@ require('dotenv').config();
 // Route for adding a todo
 userTodoRoute.post('/addtodo', handelAddTodo);
 // Route for get todos
-userTodoRoute.post('/alltodo', handelAddTodo);
+//userTodoRoute.post('/alltodo', handelAddTodo);
 // Route for delete a todo
 userTodoRoute.post('/delete', handleDeleteTodo);
 // Route for update a todo
