@@ -10,7 +10,7 @@ const addUser = async(req, res) => {
     const token = req.cookies.access_token;
 let username=`${firstname} ${lastname}`
     await sendCredentialsEmail(email,username,password)
-    jwt.verify(token, "javascrit", async(err, result) => {
+    jwt.verify(token, process.env.secret_key, async(err, result) => {
       if (err) {
         return res.status(401).send({ error: "cannot process req", err });
       } else {
@@ -86,7 +86,7 @@ const getUser = (req, res) => {
     const { email } = req.query;
     const token = req.cookies.access_token;
 
-    jwt.verify(token, "javascrit", (err, result) => {
+    jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
         return res.status(401).send({ error: "cannot process req", err });
 
@@ -127,7 +127,7 @@ const updateUser = (req, res) => {
     const { email, firstname, lastname, password } = req.body;
     const token = req.cookies.access_token;
 
-    jwt.verify(token, "javascrit", (err, result) => {
+    jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
         return res.status(401).send({ error: "cannot process req", err });
 
@@ -173,7 +173,7 @@ const deleteUser = (req, res) => {
     const { id} = req.params;
     const token = req.cookies.access_token;
 
-    jwt.verify(token, "javascrit", (err, result) => {
+    jwt.verify(token,process.env.secret_key, (err, result) => {
       if (err)
         return res.status(401).send({ error: "cannot process req", err });
 
@@ -242,9 +242,7 @@ const userLogin = async (req, res) => {
         return res.status(401).json({ error: "Invalid email or password" });
       }
       // Generate a token using the user ID
-      const token = jwt.sign({ org_id: user.org_id }, "javascrit"
-       
-      );
+      const token = jwt.sign({ org_id: user.org_id }, process.env.secret_key);
 
       // Set the token as a cookie using the 'access_token' name
       res.cookie("user_acces_token", token, {
@@ -258,7 +256,7 @@ const userLogin = async (req, res) => {
       });
 
       // Return a success response
-      res.status(200).json({ message: "Login successful", token,email:results[0].email});
+      res.status(200).json({ message: "Login successful", token,email:email});
     });
   } catch (error) {
     console.error("Error in user login:", error);

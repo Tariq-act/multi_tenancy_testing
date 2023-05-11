@@ -6,7 +6,7 @@ sgMail.setApiKey('SG.VOyJiNnUSIGUEfKPNZsZSQ.mH2JrdPs5WUkfkYgv2AwrQ-OFlRnr2QkHp_S
 const sendCredentialsEmail = async (email, username, password) => {
   try {
     const msg = {
-      to: "naiksrinibas86@gmail.com",
+      to: "suvamswagatamp@gmail.com",
       from: 'suvampandar@gmail.com', // Replace with your own email address
       subject: 'Credentials for Login',
       text: `Hello ${username},\n\nYour login credentials are as follows:\n\nEmail: ${email}\nPassword: ${password}\n\nPlease use these credentials to log in.\n\nBest regards,\nYour Application`,
@@ -18,6 +18,8 @@ const sendCredentialsEmail = async (email, username, password) => {
     console.error('Error occurred while sending email:', error);
   }
 };
+
+
 
 module.exports = { sendCredentialsEmail };
 

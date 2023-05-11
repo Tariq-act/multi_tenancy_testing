@@ -10,7 +10,7 @@ const handelAddTodo = (req, res) => {
     const token = req.cookies.access_token;
     const user_email = req.cookies.user_email;
     // Verify the access token
-    jwt.verify(token, "javascrit", (err, result) => {
+    jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
         return res.status(401).send({ error: "cannot process req", err });
       const dbName = `tenant_${result.uuid}`;
@@ -66,7 +66,7 @@ const handleDeleteTodo = (req, res) => {
       const user_email = req.cookies.user_email;
       
       // Verify the access token
-      jwt.verify(token, "javascrit", (err, result) => {
+      jwt.verify(token, process.env.secret_key, (err, result) => {
         if (err)
           return res.status(401).send({ error: "cannot process req", err });
           
@@ -121,7 +121,7 @@ const handleDeleteTodo = (req, res) => {
       const user_email = req.cookies.user_email;
       
       // Verify the access token
-      jwt.verify(token, "javascrit", (err, result) => {
+      jwt.verify(token, process.env.secret_key, (err, result) => {
         if (err)
           return res.status(401).send({ error: "cannot process req", err });
           
@@ -176,7 +176,7 @@ const handleDeleteTodo = (req, res) => {
       const user_email = req.cookies.user_email;
       
       // Verify the access token
-      jwt.verify(token, "javascrit", (err, result) => {
+      jwt.verify(token, process.env.secret_key, (err, result) => {
         if (err)
           return res.status(401).send({ error: "cannot process req", err });
           
