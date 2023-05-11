@@ -48,9 +48,9 @@ const handelClientRegister = async (req, res) => {
           }
           let user=await createUserTableIfNotExists(pool1); // Check and create 'user' table if not exists
           let todo=await createTodoTableIfNotExists(pool1);  
-          console.log(user,todo)
+        
           // Hash the password
-          bcrypt.hash(password, process.env.saltround, (err, hashedPassword) => {
+          bcrypt.hash(password, Number(process.env.saltround), (err, hashedPassword) => {
             if (err) {
               console.error("Error hashing password:", err);
               return res.status(500).send({ error: "Error hashing password" });
