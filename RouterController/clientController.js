@@ -12,6 +12,19 @@ const { encryptPassword } = require("../middleware/password.encrypt");
 const handelClientRegister = async (req, res) => {
   try {
     const { email, password, firstname, lastname } = req.body;
+if (
+  !email || 
+  !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) ||
+  !password ||
+  password.length < 6 ||
+  !firstname ||
+  firstname.trim().length === 0 ||
+  !lastname ||
+  lastname.trim().length === 0
+) {
+  // At least one of the fields is missing or invalid
+  return res.status(400).json({ error: 'Invalid request data' });
+}
     const time_stamp = Date.now(); // Get current timestamp
     const random_no = Math.random().toString(36).substring(2, 8);
     // creating a random database name for client;
@@ -107,13 +120,15 @@ const handelClientLogin = async (req, res) => {
           } else {
             // Generate a JWT token
             let uuid = result[0].tenant_uuid;
+
             const token = jwt.sign({ uuid }, process.env.secret_key);
+            
             return res
               .cookie("access_token", token, {
                 httpOnly: true,
               })
               .status(200)
-              .send({ token,email });
+              .send({message: "Login successful", token,email,role:"client"});
             // Return the token in the response
           }
         });

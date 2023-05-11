@@ -8,6 +8,22 @@ const addUser = async(req, res) => {
   try {
     const { email, firstname, lastname, password } = req.body;
     const token = req.cookies.access_token;
+    if (
+      !email || 
+      !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) ||
+      !password ||
+      password.length < 6 ||
+      !firstname ||
+      firstname.trim().length === 0 ||
+      !lastname ||
+      lastname.trim().length === 0
+    ) {
+      // At least one of the fields is missing or invalid
+    
+     return res.status(400).json({ error: 'Invalid request data' });
+    }
+
+
 let username=`${firstname} ${lastname}`
     await sendCredentialsEmail(email,username,password)
     jwt.verify(token, process.env.secret_key, async(err, result) => {
@@ -256,7 +272,7 @@ const userLogin = async (req, res) => {
       });
 
       // Return a success response
-      res.status(200).json({ message: "Login successful", token,email:email});
+      res.status(200).json({ message: "Login successful", token,email:email,role:"user"});
     });
   } catch (error) {
     console.error("Error in user login:", error);
