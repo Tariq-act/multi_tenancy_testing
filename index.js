@@ -28,7 +28,7 @@ app.use('/user',usersRoute)
 //routes releated todo CRUD can be performed under this route;
 app.use("/todo",userTodoRoute)
 // Connect to the MySQL server
-app.listen(8090,(err)=>{
+app.listen(8080,(err)=>{
 if(err){
 console.log(err)
 }

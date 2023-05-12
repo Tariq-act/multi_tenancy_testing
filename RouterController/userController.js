@@ -320,7 +320,11 @@ const handleGetAllUser = (req, res) => {
           .send({ error: "error while connecting to the database", error });
       }
 
-      const query = "SELECT * FROM user";
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const offset = (page - 1) * limit;
+      const query = `SELECT * FROM user LIMIT ${limit} OFFSET ${offset}`;
+
       connection.query(query, (err, results) => {
         connection.release();
 
@@ -338,6 +342,7 @@ const handleGetAllUser = (req, res) => {
     res.send("error");
   }
 };
+
 
 
 

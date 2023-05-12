@@ -10,7 +10,7 @@ usersRoute.post("/adduser",addUser)
 usersRoute.get("/getuser/:id",getUser)
 usersRoute.patch("/updateuser/:id",updateUser)
 usersRoute.delete("/deleteuser/:id",deleteUser)
-usersRoute.get("/alluser",handleGetAllUser)
+usersRoute.get("/getalluser",handleGetAllUser)
 
 module.exports={
     usersRoute
