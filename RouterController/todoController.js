@@ -235,8 +235,8 @@ const handleDeleteTodo = (req, res) => {
                     return res.send({ message: "Todo not found" });
                   } else {
                     pool1.release();
-                    const todo = result[0];
-                    res.status(200).send({ todo });
+                    
+                    res.status(200).send({result});
                   }
                 });
               }
