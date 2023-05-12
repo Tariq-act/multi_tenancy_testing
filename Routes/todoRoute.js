@@ -1,5 +1,5 @@
 const express = require('express');
-const { handelAddTodo, handleDeleteTodo, handleUpdateTodo, handleGetAllTodo } = require('../RouterController/todoController');
+const { handelAddTodo, handleDeleteTodo, handleUpdateTodo, handleGetAllTodo, handleGetTodo } = require('../RouterController/todoController');
 const { validateAdmin } = require('../middleware/validateadmin');
 
 
@@ -18,4 +18,5 @@ userTodoRoute.post('/updatetodo', handleUpdateTodo);
 // Route to get all todo
 userTodoRoute.get('/alltodo',validateAdmin,handleGetAllTodo);
 
+userTodoRoute.get('/usertodo',handleGetTodo)
 module.exports={userTodoRoute}

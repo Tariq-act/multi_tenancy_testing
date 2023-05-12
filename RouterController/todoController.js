@@ -7,8 +7,9 @@ const handelAddTodo = (req, res) => {
   try {
 
     const { title, description, status } = req.body;
-    const token = req.cookies.access_token;
-    const user_email = req.cookies.user_email;
+    const token = req.headers.authorization
+    const user_email = req.headers.email;
+    console.log(user_email)
     // Verify the access token
     jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
@@ -60,10 +61,11 @@ const handelAddTodo = (req, res) => {
   }
 };
 const handleDeleteTodo = (req, res) => {
+
     try {
       const { todoId } = req.params;
-      const token = req.cookies.access_token;
-      const user_email = req.cookies.user_email;
+     const token = req.headers.authorization
+    const user_email = req.headers.email;
       
       // Verify the access token
       jwt.verify(token, process.env.secret_key, (err, result) => {
@@ -117,8 +119,8 @@ const handleDeleteTodo = (req, res) => {
     try {
       const { todoId } = req.params;
       const { title, description, status } = req.body;
-      const token = req.cookies.access_token;
-      const user_email = req.cookies.user_email;
+      const token = req.headers.authorization
+    const user_email = req.headers.email;
       
       // Verify the access token
       jwt.verify(token, process.env.secret_key, (err, result) => {
@@ -173,7 +175,9 @@ const handleDeleteTodo = (req, res) => {
     try {
       const { todoId } = req.params;
       const token = req.cookies.access_token;
-      const user_email = req.cookies.user_email;
+
+      // const user_email = req.cookies.user_email;
+      const user_email=req.headers.authorization
       
       // Verify the access token
       jwt.verify(token, process.env.secret_key, (err, result) => {
@@ -271,4 +275,4 @@ const handleDeleteTodo = (req, res) => {
   
 
 
-module.exports = { handelAddTodo,handleDeleteTodo,handleUpdateTodo,handleGetAllTodo };
+module.exports = { handelAddTodo,handleDeleteTodo,handleUpdateTodo,handleGetAllTodo,handleGetTodo };
