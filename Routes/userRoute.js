@@ -8,7 +8,7 @@ usersRoute.post("/login",userLogin)
 usersRoute.use("/",validateAdmin)
 usersRoute.post("/adduser",addUser)
 usersRoute.get("/getuser/:id",getUser)
-usersRoute.patch("/updateuser/:id",updateUser)
+usersRoute.patch("/updateuser/:id", updateUser)
 usersRoute.delete("/deleteuser/:id",deleteUser)
 usersRoute.get("/getalluser",handleGetAllUser)
 

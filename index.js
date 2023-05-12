@@ -1,41 +1,46 @@
-const express=require("express")
-const app=express()
+const express = require("express");
+
+
+const app = express();
+
 app.use(express.json());
 require("dotenv").config();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const { connection } = require("./db/db");
+const { connection, releaseConnectionPool } = require("./db/db");
 const { clientRoute } = require("./Routes/clientRoute");
 const { usersRoute } = require("./Routes/userRoute");
 const { userTodoRoute } = require("./Routes/todoRoute");
 
-
 app.use(cors({
-  origin:"*"
-}))
+  origin: "*"
+}));
 
-app.get("/",(req,res)=>{
-
-res.status(200).send({result:"Home page"})
-
-})
+app.get("/", (req, res) => {
+  res.status(200).send({ result: "Home page" });
+});
 
 app.use(cookieParser());
-//registering the client and login 
-app.use("/client",clientRoute)
-//adding a new user thorough client and all crud o/p on user can be performed under this route;
-app.use('/user',usersRoute)
-//routes releated todo CRUD can be performed under this route;
-app.use("/todo",userTodoRoute)
-// Connect to the MySQL server
-app.listen(8080,(err)=>{
-if(err){
-console.log(err)
-}
-else {
-    connection()
-console.log("connected to server")
-}
-})
+app.use("/client", clientRoute);
+app.use('/user', usersRoute);
+app.use("/todo", userTodoRoute);
 
+const server = app.listen(8090, async (err) => {
+  if (err) {
+    console.log(err);
+  } else {
+    try {
+      await connection(); // Connect to the database
+      console.log("Connected to the database");
+    } catch (error) {
+      console.log("Error while connecting to the database:", error);
+      server.close();
+    }
+  }
+});
 
+// Close the database connection when the server is closed
+server.on("close", () => {
+  releaseConnectionPool();
+  console.log("Server closed. Connection pool released.");
+});

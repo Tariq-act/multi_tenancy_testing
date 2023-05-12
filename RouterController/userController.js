@@ -5,14 +5,12 @@ const { encryptPassword } = require("../middleware/password.encrypt");
 const { decryptPassword } = require("../middleware/password.decrypt");
 const { sendCredentialsEmail } = require("../middleware/email&pass.sender");
 
-
-
-const addUser = async(req, res) => {
+const addUser = async (req, res) => {
   try {
     const { email, firstname, lastname, password } = req.body;
-    const token = req.cookies.access_token;
+    const token = req.headers.authorization;
     if (
-      !email || 
+      !email ||
       !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) ||
       !password ||
       password.length < 6 ||
@@ -22,30 +20,28 @@ const addUser = async(req, res) => {
       lastname.trim().length === 0
     ) {
       // At least one of the fields is missing or invalid
-    
-     return res.status(400).json({ error: 'Invalid request data' });
+
+      return res.status(400).json({ error: "Invalid request data" });
     }
-
-
-let username=`${firstname} ${lastname}`
+    let username = `${firstname} ${lastname}`;
     // await sendCredentialsEmail(email,username,password)
-    jwt.verify(token, process.env.secret_key, async(err, result) => {
+    jwt.verify(token, process.env.secret_key, async (err, result) => {
       if (err) {
         return res.status(401).send({ error: "cannot process req", err });
       } else {
-      let hashpassword=await encryptPassword(password)
+        let hashpassword = await encryptPassword(password);
 
         const insertUserQuery =
           "INSERT INTO user_incomming (email, firstname, lastname, password, role, org_id) VALUES (?, ?, ?, ?, ?, ?)";
         //saving user uuid to a cookie for later use
         res.cookie("useruuid", result.org_id, {
-              httpOnly: true,
-            });
+          httpOnly: true,
+        });
 
-          console.log(req.cookies.useruuid,"useriiid")
+        console.log(req.cookies.useruuid, "useriiid");
 
-        let uuid = await encryptPassword(result.uuid) 
-     
+        let uuid = await encryptPassword(result.uuid);
+
         const insertUserValues = [
           email,
           firstname,
@@ -110,7 +106,8 @@ let username=`${firstname} ${lastname}`
 const getUser = (req, res) => {
   try {
     const { email } = req.query;
-    const token = req.cookies.access_token;
+    const token = req.headers.authorization;
+    const user_email = req.headers.email;
 
     jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
@@ -151,7 +148,9 @@ const getUser = (req, res) => {
 const updateUser = (req, res) => {
   try {
     const { email, firstname, lastname, password } = req.body;
-    const token = req.cookies.access_token;
+    const userId = req.params.id;
+    const token = req.headers.authorization;
+    const user_email = req.headers.email;
 
     jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
@@ -174,17 +173,19 @@ const updateUser = (req, res) => {
         console.log("Connected to the database");
 
         const updateUserQuery =
-          "UPDATE user SET firstname = ?, lastname = ?, password = ? WHERE email = ?";
-        const updateUserValues = [firstname, lastname, password, email];
+          "UPDATE user SET firstname = ?, lastname = ?, password = ? WHERE id = ?";
+        const updateUserValues = [firstname, lastname, password, userId];
 
         connection.query(updateUserQuery, updateUserValues, (err, result) => {
+          connection.release();
           if (err) {
-            connection.release();
             return res.status(401).send({ error: "cannot process req", err });
           }
-
-          connection.release();
-          res.send("User updated successfully");
+          if (result.affectedRows === 0) {
+            return res.status(404).send({ message: "User not found" });
+          } else {
+            res.send("User updated successfully");
+          }
         });
       });
     });
@@ -196,10 +197,11 @@ const updateUser = (req, res) => {
 
 const deleteUser = (req, res) => {
   try {
-    const { id} = req.params;
-    const token = req.cookies.access_token;
+    const userId = req.params.id;
+    const token = req.headers.authorization;
+    const user_email = req.headers.email;
 
-    jwt.verify(token,process.env.secret_key, (err, result) => {
+    jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
         return res.status(401).send({ error: "cannot process req", err });
 
@@ -220,15 +222,19 @@ const deleteUser = (req, res) => {
         console.log("Connected to the database");
 
         const deleteUserQuery = "DELETE FROM user WHERE id = ?";
-        const deleteUserValues = [id];
+        const deleteUserValues = [userId];
 
         connection.query(deleteUserQuery, deleteUserValues, (err, result) => {
+          connection.release();
           if (err) {
-            connection.release();
             return res.status(401).send({ error: "cannot process req", err });
           }
-          connection.release();
-          res.send("User deleted successfully");
+
+          if (result.affectedRows === 0) {
+            return res.status(404).send({ message: "User not found" });
+          } else {
+            res.send("User deleted successfully");
+          }
         });
       });
     });
@@ -271,30 +277,36 @@ const userLogin = async (req, res) => {
 
       //getting uuid from user cookie;
 
-      const useruuid=req.cookies.useruuid
+      const useruuid = req.cookies.useruuid;
 
-      console.log(req.cookies.useruuid,"u")
- 
-       
-      const decryptuuid=await decryptPassword(useruuid,user.org_id) 
-      
-      console.log(decryptuuid,"de");
-       
-      const token = jwt.sign({ org_id: decryptuuid}, process.env.secret_key);
+      console.log(req.cookies.useruuid, "u");
+
+      const decryptuuid = await decryptPassword(useruuid, user.org_id);
+
+      console.log(decryptuuid, "de");
+
+      const token = jwt.sign({ org_id: decryptuuid }, process.env.secret_key);
 
       // Set the token as a cookie using the 'access_token' name
       res.cookie("user_acces_token", token, {
         httpOnly: true,
         // Set to true if using HTTPS
       });
-      
+
       res.cookie("user_email", results[0].email, {
         httpOnly: true,
         // Set to true if using HTTPS
       });
 
       // Return a success response
-      res.status(200).json({ message: "Login successful", token,email:email,role:"user"});
+      res
+        .status(200)
+        .json({
+          message: "Login successful",
+          token,
+          email: email,
+          role: "user",
+        });
     });
   } catch (error) {
     console.error("Error in user login:", error);
@@ -329,9 +341,7 @@ const handleGetAllUser = (req, res) => {
         connection.release();
 
         if (err) {
-          return res
-            .status(401)
-            .send({ error: "cannot process request", err });
+          return res.status(401).send({ error: "cannot process request", err });
         }
 
         res.send(results);
@@ -344,16 +354,11 @@ const handleGetAllUser = (req, res) => {
 };
 
 
-
-
-
-
 module.exports = {
-  addUser,deleteUser,updateUser,getUser,userLogin,handleGetAllUser
+  addUser,
+  deleteUser,
+  updateUser,
+  getUser,
+  userLogin,
+  handleGetAllUser,
 };
-
-
-
-
-
-

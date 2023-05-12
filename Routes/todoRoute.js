@@ -14,9 +14,9 @@ userTodoRoute.post('/addtodo', handelAddTodo);
 // Route for delete a todo
 userTodoRoute.delete('/delete/:id', handleDeleteTodo);
 // Route for update a todo
-userTodoRoute.patch('/updatetodo', handleUpdateTodo);
+userTodoRoute.patch('/update/:id', handleUpdateTodo);
 // Route to get all todo
 userTodoRoute.get('/alltodo',validateAdmin,handleGetAllTodo);
-
+//get perticular user todos
 userTodoRoute.get('/usertodo',handleGetTodo)
 module.exports={userTodoRoute}
