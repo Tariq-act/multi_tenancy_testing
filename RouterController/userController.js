@@ -10,7 +10,7 @@ const { sendCredentialsEmail } = require("../middleware/email&pass.sender");
 const addUser = async(req, res) => {
   try {
     const { email, firstname, lastname, password } = req.body;
-    const token = req.cookies.access_token;
+    const token = req.headers.authorization;
     if (
       !email || 
       !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) ||
@@ -25,8 +25,6 @@ const addUser = async(req, res) => {
     
      return res.status(400).json({ error: 'Invalid request data' });
     }
-
-
 let username=`${firstname} ${lastname}`
     // await sendCredentialsEmail(email,username,password)
     jwt.verify(token, process.env.secret_key, async(err, result) => {
@@ -110,7 +108,8 @@ let username=`${firstname} ${lastname}`
 const getUser = (req, res) => {
   try {
     const { email } = req.query;
-    const token = req.cookies.access_token;
+    const token = req.headers.authorization
+    const user_email = req.headers.email;
 
     jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
@@ -149,9 +148,11 @@ const getUser = (req, res) => {
 };
 
 const updateUser = (req, res) => {
+
   try {
     const { email, firstname, lastname, password } = req.body;
-    const token = req.cookies.access_token;
+    const token = req.headers.authorization
+    const user_email = req.headers.email;
 
     jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
@@ -196,8 +197,9 @@ const updateUser = (req, res) => {
 
 const deleteUser = (req, res) => {
   try {
-    const { id} = req.params;
-    const token = req.cookies.access_token;
+    const { id} = req.params.id;
+    const token = req.headers.authorization
+    const user_email = req.headers.email;
 
     jwt.verify(token,process.env.secret_key, (err, result) => {
       if (err)
