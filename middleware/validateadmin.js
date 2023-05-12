@@ -4,7 +4,7 @@ const { pool } = require("../db/db");
 // Assuming you have a connection pool defined as 'pool'
 const validateAdmin = (req, res, next) => {
  // Assuming the email is sent in the 'email' header
-  const userEmail=req.headers.authorization
+  const userEmail=req.headers.email
   // Query to retrieve the user's role from the database based on the email
   const query = "SELECT * FROM registration WHERE email = ?";
   pool.query(query, [userEmail], (error, results) => {
