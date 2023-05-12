@@ -12,9 +12,9 @@ userTodoRoute.post('/addtodo', handelAddTodo);
 // Route for get todos
 //userTodoRoute.post('/alltodo', handelAddTodo);
 // Route for delete a todo
-userTodoRoute.post('/delete', handleDeleteTodo);
+userTodoRoute.delete('/delete/:id', handleDeleteTodo);
 // Route for update a todo
-userTodoRoute.post('/updatetodo', handleUpdateTodo);
+userTodoRoute.patch('/updatetodo', handleUpdateTodo);
 // Route to get all todo
 userTodoRoute.get('/alltodo',validateAdmin,handleGetAllTodo);
 

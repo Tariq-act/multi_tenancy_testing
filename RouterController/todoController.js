@@ -103,6 +103,7 @@ const handleDeleteTodo = (req, res) => {
                     return res.status(401).send({ error: "cannot process req", err });
                   }
                   pool1.release();
+                  console.log(result)
                   res.status(200).send({ message: "Todo deleted successfully" });
                 });
               }
