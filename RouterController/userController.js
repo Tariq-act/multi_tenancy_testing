@@ -151,6 +151,7 @@ const updateUser = (req, res) => {
 
   try {
     const { email, firstname, lastname, password } = req.body;
+    const userId=req.params.id
     const token = req.headers.authorization
     const user_email = req.headers.email;
 
@@ -175,8 +176,8 @@ const updateUser = (req, res) => {
         console.log("Connected to the database");
 
         const updateUserQuery =
-          "UPDATE user SET firstname = ?, lastname = ?, password = ? WHERE email = ?";
-        const updateUserValues = [firstname, lastname, password, email];
+          "UPDATE user SET firstname = ?, lastname = ?, password = ? WHERE id = ?";
+        const updateUserValues = [firstname, lastname, password, userId];
 
         connection.query(updateUserQuery, updateUserValues, (err, result) => {
           if (err) {
@@ -197,7 +198,7 @@ const updateUser = (req, res) => {
 
 const deleteUser = (req, res) => {
   try {
-    const { id} = req.params.id;
+    const userId = req.params.id;
     const token = req.headers.authorization
     const user_email = req.headers.email;
 
@@ -222,7 +223,7 @@ const deleteUser = (req, res) => {
         console.log("Connected to the database");
 
         const deleteUserQuery = "DELETE FROM user WHERE id = ?";
-        const deleteUserValues = [id];
+        const deleteUserValues = [userId];
 
         connection.query(deleteUserQuery, deleteUserValues, (err, result) => {
           if (err) {

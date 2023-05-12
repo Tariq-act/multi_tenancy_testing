@@ -9,14 +9,35 @@ const dbConfig = {
 
 }
   const pool = mysql.createPool(dbConfig);
-  
-  const connection = () => {
-    pool.getConnection((err, result) => {
+
+
+
+// Function to release the connection pool
+const releaseConnectionPool = () => {
+  pool.end((err) => {
+    if (err) {
+      console.log("Error while releasing the connection pool:", err);
+    } else {
+      console.log("Connection pool released");
+    }
+  });
+};
+
+// Function to get a connection from the pool
+const connection = () => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, connection) => {
       if (err) {
-        console.log("error while connnecting to DB",err);
+        console.log("Error while connecting to the database:", err);
+        reject(err);
       } else {
-        console.log("successfully connected to ", result.threadId, result.config.database);
+        console.log("Successfully connected to the database. Connection ID:", connection.threadId);
+        resolve(connection);
       }
     });
-  };
-  module.exports={dbConfig,connection,pool}
+  });
+};
+
+
+  module.exports={dbConfig,connection,pool,releaseConnectionPool,}
+

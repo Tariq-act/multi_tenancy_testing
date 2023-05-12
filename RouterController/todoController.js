@@ -161,15 +161,19 @@ const handleDeleteTodo = (req, res) => {
               } else {
                 const user_id = results[0].id;
                 // Update the todo in the tenant's database
-                const updateTodoQuery = "UPDATE todo SET title = ?, description = ?, status = ? WHERE id = ? AND user_id = ?";
-                const updateTodoValues = [title, description, status, todoId, user_id];
+                const updateTodoQuery = "UPDATE todo SET title = ?, description = ?, status = ? WHERE id = ?"
+                const updateTodoValues = [title, description, status, todoId];
                 pool1.query(updateTodoQuery, updateTodoValues, (err, result) => {
                   if (err) {
                     pool1.release();
                     return res.status(401).send({ error: "cannot process req", err });
                   }
+                  if (result.affectedRows === 0) {
+                    return res.status(404).send({ message: "Todo not found" });
+                  }else {
                   pool1.release();
                   res.status(200).send({ message: "Todo updated successfully" });
+                  }
                 });
               }
             });
