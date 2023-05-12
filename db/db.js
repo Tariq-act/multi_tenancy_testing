@@ -1,9 +1,9 @@
 const mysql=require("mysql")
 require("dotenv").config()
 const dbConfig = {
-  host: process.env.host,
-  user: process.env.database_user,
-  password: process.env.database_password,
+  host: "localhost",
+  user: "root",
+  password: "Suvam@7787",
   database: process.env.database_name,
   connectionLimit: 100,
 
