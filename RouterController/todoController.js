@@ -217,7 +217,7 @@ const handleGetTodo = (req, res) => {
     const token = req.headers.authorization;
 
     // const user_email = req.cookies.user_email;
-    const user_email = req.headers.authorization;
+    const user_email = req.headers.email;
 
     // Verify the access token
     jwt.verify(token, process.env.secret_key, (err, result) => {
@@ -250,16 +250,16 @@ const handleGetTodo = (req, res) => {
               const user_id = results[0].id;
               // Fetch the todo from the tenant's database
               const getTodoQuery =
-                "SELECT * FROM todo WHERE id = ? AND user_id = ?";
-              const getTodoValues = [todoId, user_id];
+                "SELECT * FROM todo WHERE user_id = ?";
+              const getTodoValues = [ user_id];
               pool1.query(getTodoQuery, getTodoValues, (err, result) => {
                 if (err) {
-                  pool1.release();
+                 
                   return res
                     .status(401)
                     .send({ error: "cannot process req", err });
                 }
-                pool1.release();
+              
                 if (result.length === 0) {
                   return res.send({ message: "Todo not found" });
                 } else {
