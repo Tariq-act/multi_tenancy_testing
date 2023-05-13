@@ -1,17 +1,13 @@
 const mysql=require("mysql")
 require("dotenv").config()
 const dbConfig = {
-  host: process.env.host,
-  user: process.env.database_user,
-  password: process.env.database_password, 
+  host: "localhost",
+  user: "root",
+  password: "Suvam@7787", 
   database: process.env.database_name,
   connectionLimit: 100,
-
 }
   const pool = mysql.createPool(dbConfig);
-
-
-
 // Function to release the connection pool
 const releaseConnectionPool = () => {
   pool.end((err) => {
@@ -31,7 +27,8 @@ const connection = () => {
         console.log("Error while connecting to the database:", err);
         reject(err);
       } else {
-        console.log("Successfully connected to the database. Connection ID:", connection.threadId);
+        console.log("Successfully connected to the database. Connection ID:", connection.threadId,connection.config.database);
+      
         resolve(connection);
       }
     });
