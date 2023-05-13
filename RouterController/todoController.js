@@ -327,12 +327,15 @@ const handelAddUserTodo = (req, res) => {
     const { title, description, status } = req.body;
     const token = req.headers.authorization;
     const user_email = req.headers.email;
-    console.log(user_email);
+    // console.log(token);
     // Verify the access token
     jwt.verify(token, process.env.secret_key, (err, result) => {
-      if (err)
-        return res.status(401).send({ error: "cannot process req", err });
-      const dbName = `tenant_${result.uuid}`;
+      if (err){
+        return res.status(401).send({ error: "cannot process req", err });}
+
+        else{
+      
+      const dbName = `tenant_${result.org_id}`;
       const userDbConfig = {
         ...dbConfig,
         database: dbName,
@@ -372,7 +375,10 @@ const handelAddUserTodo = (req, res) => {
           });
         }
       });
-    });
+    }
+   
+    })
+    ;
   } catch (error) {
     console.log(error);
     res.send("error");
@@ -393,8 +399,8 @@ const handleDeleteUserTodo = (req, res) => {
       if (err) {
         return res.status(401).send({ error: "Unauthorized", err });
       }
-
-      const dbName = `tenant_${result.uuid}`;
+  else{
+      const dbName = `tenant_${result.org_id}`;
       const userDbConfig = {
         ...dbConfig,
         database: dbName,
@@ -445,8 +451,8 @@ const handleDeleteUserTodo = (req, res) => {
             res.status(200).send({ message: "Todo deleted successfully" });
           });
         });
-      });
     });
+   } });
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
