@@ -8,6 +8,7 @@ const handelAddTodo = (req, res) => {
     const token = req.headers.authorization;
     const user_email = req.headers.email;
     console.log(user_email);
+
     // Verify the access token
     jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
