@@ -211,12 +211,13 @@ const handleUpdateTodo = (req, res) => {
 
 
 // To get all todo from a perticular user
-
 const handleGetTodo = (req, res) => {
   try {
     const todoId = req.params.id;
     const token = req.headers.authorization;
     const user_email = req.headers.email;
+    const { page, limit } = req.query;
+    const offset = (page - 1) * limit;
 
     jwt.verify(token, process.env.secret_key, (err, result) => {
       if (err)
@@ -245,12 +246,10 @@ const handleGetTodo = (req, res) => {
               return res.send({ message: "User not found" });
             } else {
               const user_id = results[0].id;
-              const page = req.query.page || 1; // Get the page number from query parameters
-              const pageSize =req.query.limit||10 ; // Set the number of todos per page
-              const offset = (page - 1) * pageSize; // Calculate the offset
 
-              const getTodoQuery = "SELECT * FROM todo WHERE user_id = ? LIMIT ? OFFSET ?";
-              const getTodoValues = [user_id, pageSize, offset];
+              const getTodoQuery =
+                "SELECT * FROM todo WHERE user_id = ? LIMIT ? OFFSET ?";
+              const getTodoValues = [user_id, parseInt(limit), parseInt(offset)];
               pool1.query(getTodoQuery, getTodoValues, (err, result) => {
                 if (err) {
                   return res
@@ -274,6 +273,7 @@ const handleGetTodo = (req, res) => {
     res.send("error");
   }
 };
+
 
 
 
