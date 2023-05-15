@@ -246,7 +246,7 @@ const handleGetTodo = (req, res) => {
             } else {
               const user_id = results[0].id;
               const page = req.query.page || 1; // Get the page number from query parameters
-              const pageSize = 10; // Set the number of todos per page
+              const pageSize =req.query.limit||10 ; // Set the number of todos per page
               const offset = (page - 1) * pageSize; // Calculate the offset
 
               const getTodoQuery = "SELECT * FROM todo WHERE user_id = ? LIMIT ? OFFSET ?";
